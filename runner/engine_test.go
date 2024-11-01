@@ -892,7 +892,7 @@ func Test(t *testing.T) {
 		t.Fatal(err)
 	}
 	go func() {
-		file, err = os.OpenFile("main_test.go", os.O_APPEND|os.O_WRONLY, 0o644)
+		file, err := os.OpenFile("main_test.go", os.O_APPEND|os.O_WRONLY, 0o644)
 		assert.NoError(t, err)
 		defer file.Close()
 		_, err = file.WriteString("\n")
