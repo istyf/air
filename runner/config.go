@@ -17,6 +17,8 @@ import (
 	"dario.cat/mergo"
 	"github.com/fatih/color"
 	"github.com/pelletier/go-toml"
+
+	"github.com/air-verse/air/runner/output"
 )
 
 const (
@@ -576,7 +578,7 @@ func (c *Config) preprocess(args map[string]TomlInfo) error {
 		if !c.Build.IgnoreDangerousRootDir {
 			return fmt.Errorf("refusing to run in %s - this would watch too many files. Please run air in a project directory", dirName)
 		}
-		fmt.Fprintln(os.Stderr, "[warning] ignoring root directory protections. This could cause excessive file watching. It is recommended to run air in a project directory")
+		output.Stderrln("[warning] ignoring root directory protections. This could cause excessive file watching. It is recommended to run air in a project directory")
 	}
 
 	if c.TmpDir == "" {
@@ -837,5 +839,5 @@ func warnDeprecatedBin(cfg *Config) {
 		return
 	}
 
-	fmt.Fprintln(os.Stderr, "[warning] build.bin is deprecated; set build.entrypoint instead")
+	output.Stderrln("[warning] build.bin is deprecated; set build.entrypoint instead")
 }

@@ -1560,8 +1560,7 @@ include_file = ["main.sh"]
 
 	t.Logf("start change main.sh")
 	go func() {
-		err = os.WriteFile("main.sh", []byte("#!/bin/sh\nprintf modified > output"), 0o755)
-		if err != nil {
+		if err := os.WriteFile("main.sh", []byte("#!/bin/sh\nprintf modified > output"), 0o755); err != nil {
 			log.Fatalf("Error updating file: %s.", err)
 		}
 	}()

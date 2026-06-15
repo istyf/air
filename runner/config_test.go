@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/fatih/color"
+
+	"github.com/air-verse/air/runner/output"
 )
 
 const (
@@ -679,27 +681,12 @@ cmd = "go build -o ./tmp/main ."
 		t.Fatalf("failed to write config: %v", err)
 	}
 
-	oldStderr := os.Stderr
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatalf("failed to create pipe: %v", err)
-	}
-	os.Stderr = w
+	errorOutput := output.CaptureStderr(func() {
+		_, _ = InitConfig(cfgPath, nil)
+	})
 
-	_, _ = InitConfig(cfgPath, nil)
-
-	if err := w.Close(); err != nil {
-		t.Fatalf("failed to close writer: %v", err)
-	}
-	os.Stderr = oldStderr
-
-	out, err := io.ReadAll(r)
-	if err != nil {
-		t.Fatalf("failed to read output: %v", err)
-	}
-	output := string(out)
-	if !strings.Contains(output, "build.bin is deprecated") {
-		t.Fatalf("missing bin deprecation warning in output: %q", output)
+	if !strings.Contains(errorOutput, "build.bin is deprecated") {
+		t.Fatalf("missing bin deprecation warning in output: %q", errorOutput)
 	}
 }
 
