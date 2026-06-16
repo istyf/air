@@ -12,7 +12,7 @@ import (
 	"syscall"
 
 	"github.com/air-verse/air/runner"
-	"github.com/fatih/color"
+	"github.com/air-verse/air/runner/output"
 )
 
 var (
@@ -130,9 +130,9 @@ func printVersionOutput(cfg *runner.Config) {
 func main() {
 	switch colorMode {
 	case "always":
-		color.NoColor = false
+		output.DisableColors(false)
 	case "never":
-		color.NoColor = true
+		output.DisableColors(true)
 	case "auto", "":
 		// do nothing
 	default:

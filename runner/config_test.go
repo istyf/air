@@ -11,8 +11,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/fatih/color"
-
 	"github.com/air-verse/air/runner/output"
 )
 
@@ -1032,27 +1030,12 @@ ignore_dangerous_root_dir = true
 			t.Fatalf("failed to write config: %v", err)
 		}
 
-		oldStderr := os.Stderr
-		r, w, err := os.Pipe()
-		if err != nil {
-			t.Fatalf("failed to create pipe: %v", err)
-		}
-		os.Stderr = w
+		errorOutput := output.CaptureStderr(func() {
+			_, _ = InitConfig(cfgPath, nil)
+		})
 
-		_, _ = InitConfig(cfgPath, nil)
-
-		if err := w.Close(); err != nil {
-			t.Fatalf("failed to close writer: %v", err)
-		}
-		os.Stderr = oldStderr
-
-		out, err := io.ReadAll(r)
-		if err != nil {
-			t.Fatalf("failed to read output: %v", err)
-		}
-		output := string(out)
-		if !strings.Contains(output, "ignoring root directory protections. This could cause excessive file watching. It is recommended to run air in a project directory") {
-			t.Fatalf("missing root directory protection warning in output: %q", output)
+		if !strings.Contains(errorOutput, "ignoring root directory protections. This could cause excessive file watching. It is recommended to run air in a project directory") {
+			t.Fatalf("missing root directory protection warning in output: %q", errorOutput)
 		}
 	})
 	t.Run("when ignore_dangerous_root_dir is false", func(t *testing.T) {
@@ -1133,8 +1116,8 @@ cmd = "go build -o ./tmp/main ."
 
 func TestColorMode(t *testing.T) {
 	// Save and restore the global NoColor state so tests don't bleed into each other.
-	original := color.NoColor
-	t.Cleanup(func() { color.NoColor = original })
+	original := output.ColorsDisabled()
+	t.Cleanup(func() { output.DisableColors(original) })
 
 	cases := []struct {
 		name        string
@@ -1151,7 +1134,7 @@ func TestColorMode(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			color.NoColor = original
+			output.DisableColors(original)
 			cfg := defaultConfig()
 			cfg.Color.Mode = tc.mode
 			err := cfg.preprocess(nil)
@@ -1167,8 +1150,10 @@ func TestColorMode(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
-			if color.NoColor != tc.wantNoColor {
-				t.Fatalf("color.NoColor = %v, want %v", color.NoColor, tc.wantNoColor)
+
+			disabled := output.ColorsDisabled()
+			if disabled != tc.wantNoColor {
+				t.Fatalf("output.ColorsDisabled() = %v, want %v", disabled, tc.wantNoColor)
 			}
 		})
 	}
@@ -1177,8 +1162,8 @@ func TestColorMode(t *testing.T) {
 func TestColorModeWithFullBin(t *testing.T) {
 	// Regression: color mode must be applied even when build.full_bin is set,
 	// because preprocess returns early after FullBin is processed.
-	original := color.NoColor
-	t.Cleanup(func() { color.NoColor = original })
+	original := output.ColorsDisabled()
+	t.Cleanup(func() { output.DisableColors(original) })
 
 	cfg := defaultConfig()
 	cfg.Build.FullBin = "./tmp/main"
@@ -1186,7 +1171,7 @@ func TestColorModeWithFullBin(t *testing.T) {
 	if err := cfg.preprocess(nil); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !color.NoColor {
-		t.Fatal("color.NoColor should be true when mode=never and full_bin is set")
+	if !output.ColorsDisabled() {
+		t.Fatal("output.ColorsDisabled should be true when mode=never and full_bin is set")
 	}
 }

@@ -2,32 +2,16 @@ package runner
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
-	"github.com/fatih/color"
-)
-
-var (
-	rawColor = "raw"
-	// TODO: support more colors
-	colorMap = map[string]color.Attribute{
-		"red":     color.FgRed,
-		"green":   color.FgGreen,
-		"yellow":  color.FgYellow,
-		"blue":    color.FgBlue,
-		"magenta": color.FgMagenta,
-		"cyan":    color.FgCyan,
-		"white":   color.FgWhite,
-	}
+	"github.com/air-verse/air/runner/output"
 )
 
 type logFunc func(string, ...interface{})
 
 type logger struct {
 	config  *Config
-	colors  map[string]string
 	loggers map[string]logFunc
 }
 
@@ -39,17 +23,18 @@ func newLogger(cfg *Config) *logger {
 	colors := cfg.colorInfo()
 	loggers := make(map[string]logFunc, len(colors))
 	for name, nameColor := range colors {
-		loggers[name] = newLogFunc(nameColor, cfg.Log)
+		loggers[name] = newLogFunc(output.ColorFromName(nameColor), cfg.Log)
 	}
+
 	loggers["default"] = defaultLogger()
+
 	return &logger{
 		config:  cfg,
-		colors:  colors,
 		loggers: loggers,
 	}
 }
 
-func newLogFunc(colorname string, cfg cfgLog) logFunc {
+func newLogFunc(c output.Color, cfg cfgLog) logFunc {
 	return func(msg string, v ...interface{}) {
 		// There are some escape sequences to format color in terminal, so cannot
 		// just trim new line from right.
@@ -67,19 +52,9 @@ func newLogFunc(colorname string, cfg cfgLog) logFunc {
 			t := time.Now().Format("15:04:05")
 			msg = fmt.Sprintf("[%s] %s", t, msg)
 		}
-		if colorname == rawColor {
-			fmt.Fprintf(os.Stderr, msg, v...)
-		} else {
-			color.New(getColor(colorname)).Fprintf(color.Error, msg, v...)
-		}
-	}
-}
 
-func getColor(name string) color.Attribute {
-	if v, ok := colorMap[name]; ok {
-		return v
+		output.StderrColorf(c, msg, v...)
 	}
-	return color.FgWhite
 }
 
 func (l *logger) main() logFunc {
@@ -99,11 +74,11 @@ func (l *logger) watcher() logFunc {
 }
 
 func rawLogger() logFunc {
-	return newLogFunc("raw", defaultConfig().Log)
+	return newLogFunc(output.Raw, defaultConfig().Log)
 }
 
 func defaultLogger() logFunc {
-	return newLogFunc("white", defaultConfig().Log)
+	return newLogFunc(output.White, defaultConfig().Log)
 }
 
 func (l *logger) getLogger(name string) logFunc {

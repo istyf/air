@@ -1,17 +1,17 @@
 module github.com/air-verse/air
 
-go 1.25
+go 1.25.0
 
 require (
 	dario.cat/mergo v1.0.2
 	github.com/andybalholm/brotli v1.2.0
-	github.com/fatih/color v1.18.0
+	github.com/fatih/color v1.19.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gohugoio/hugo v0.149.1
 	github.com/joho/godotenv v1.5.1
 	github.com/pelletier/go-toml v1.9.5
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/sys v0.35.0
+	golang.org/x/sys v0.42.0
 )
 
 require (

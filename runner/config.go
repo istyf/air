@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"dario.cat/mergo"
-	"github.com/fatih/color"
 	"github.com/pelletier/go-toml"
 
 	"github.com/air-verse/air/runner/output"
@@ -632,12 +631,11 @@ func (c *Config) preprocess(args map[string]TomlInfo) error {
 
 	c.Build.ExcludeDir = ed
 
-	// Set colorful output, see https://github.com/fatih/color#disableenable-color
 	switch c.Color.Mode {
 	case "always":
-		color.NoColor = false
+		output.DisableColors(false)
 	case "never":
-		color.NoColor = true
+		output.DisableColors(true)
 	case "auto", "":
 		break
 	default:
@@ -836,6 +834,8 @@ func warnDeprecatedBin(cfg *Config) {
 	}
 
 	if cfg.Build.Bin != "" && len(cfg.Build.Entrypoint) > 0 {
+		// unreachable: The previous if would have returned if
+		// 				len(cfg.Build.Entrypoint) > 0
 		return
 	}
 
