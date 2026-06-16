@@ -9,7 +9,6 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/air-verse/air/runner/output"
 	"golang.org/x/sys/windows"
 )
 
@@ -59,9 +58,6 @@ func (e *Engine) startCmd(cmd string) (*exec.Cmd, io.ReadCloser, io.ReadCloser, 
 	if err != nil {
 		return nil, nil, nil, err
 	}
-
-	c.Stdout = output.StdoutWriter()
-	c.Stderr = output.StderrWriter()
 
 	err = c.Start()
 	if err != nil {
