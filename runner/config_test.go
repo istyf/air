@@ -1116,25 +1116,25 @@ cmd = "go build -o ./tmp/main ."
 
 func TestColorMode(t *testing.T) {
 	// Save and restore the global NoColor state so tests don't bleed into each other.
-	original := output.ColorsDisabled()
-	t.Cleanup(func() { output.DisableColors(original) })
+	original := output.GetColorMode()
+	t.Cleanup(func() { output.SetColorMode(original) })
 
 	cases := []struct {
-		name        string
-		mode        string
-		wantNoColor bool
-		wantErr     bool
+		name     string
+		mode     string
+		wantMode output.ColorMode
+		wantErr  bool
 	}{
-		{name: "always enables color", mode: "always", wantNoColor: false},
-		{name: "never disables color", mode: "never", wantNoColor: true},
-		{name: "auto leaves default", mode: "auto", wantNoColor: original},
-		{name: "empty leaves default", mode: "", wantNoColor: original},
+		{name: "always enables color", mode: "always", wantMode: output.ColorAlways},
+		{name: "never disables color", mode: "never", wantMode: output.ColorNever},
+		{name: "auto leaves default", mode: "auto", wantMode: original},
+		{name: "empty leaves default", mode: "", wantMode: original},
 		{name: "invalid returns error", mode: "rainbow", wantErr: true},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			output.DisableColors(original)
+			output.SetColorMode(original)
 			cfg := defaultConfig()
 			cfg.Color.Mode = tc.mode
 			err := cfg.preprocess(nil)
@@ -1151,9 +1151,9 @@ func TestColorMode(t *testing.T) {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
-			disabled := output.ColorsDisabled()
-			if disabled != tc.wantNoColor {
-				t.Fatalf("output.ColorsDisabled() = %v, want %v", disabled, tc.wantNoColor)
+			disabled := output.GetColorMode()
+			if disabled != tc.wantMode {
+				t.Fatalf("output.GetColorMode() = %v, want %v", disabled, tc.wantMode)
 			}
 		})
 	}
@@ -1162,8 +1162,8 @@ func TestColorMode(t *testing.T) {
 func TestColorModeWithFullBin(t *testing.T) {
 	// Regression: color mode must be applied even when build.full_bin is set,
 	// because preprocess returns early after FullBin is processed.
-	original := output.ColorsDisabled()
-	t.Cleanup(func() { output.DisableColors(original) })
+	original := output.GetColorMode()
+	t.Cleanup(func() { output.SetColorMode(original) })
 
 	cfg := defaultConfig()
 	cfg.Build.FullBin = "./tmp/main"
@@ -1171,7 +1171,7 @@ func TestColorModeWithFullBin(t *testing.T) {
 	if err := cfg.preprocess(nil); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !output.ColorsDisabled() {
-		t.Fatal("output.ColorsDisabled should be true when mode=never and full_bin is set")
+	if output.GetColorMode() != output.ColorNever {
+		t.Fatal("output.GetColorMode should be ColorNever when mode=never and full_bin is set")
 	}
 }

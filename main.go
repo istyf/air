@@ -128,15 +128,8 @@ func printVersionOutput(cfg *runner.Config) {
 }
 
 func main() {
-	switch colorMode {
-	case "always":
-		output.DisableColors(false)
-	case "never":
-		output.DisableColors(true)
-	case "auto", "":
-		// do nothing
-	default:
-		log.Fatalf("unsupported color mode: %s. Expected always, auto, or never", colorMode)
+	if err := output.SetColorModeFromString(colorMode); err != nil {
+		log.Fatal(err.Error())
 	}
 
 	if showVersion {

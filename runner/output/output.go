@@ -24,16 +24,24 @@ const (
 	White
 )
 
+type ColorMode int
+
+const (
+	ColorAuto ColorMode = iota
+	ColorAlways
+	ColorNever
+)
+
 type stream struct {
-	writeMu       sync.Mutex
-	captureMu     sync.Mutex
-	writer        io.Writer
-	disableColors bool
+	writeMu   sync.Mutex
+	captureMu sync.Mutex
+	writer    io.Writer
+	colorMode ColorMode
 }
 
 var stderr = stream{
-	writer:        os.Stderr,
-	disableColors: color.NoColor,
+	writer:    os.Stderr,
+	colorMode: ColorAuto,
 }
 
 var colorNameMap = map[string]Color{
@@ -48,15 +56,14 @@ var colorNameMap = map[string]Color{
 	"white":   White,
 }
 
-var colorMap = map[Color]*color.Color{
-	NoColor: nil, Raw: nil,
-	Red:     color.New(color.FgRed),
-	Green:   color.New(color.FgGreen),
-	Yellow:  color.New(color.FgYellow),
-	Blue:    color.New(color.FgBlue),
-	Magenta: color.New(color.FgMagenta),
-	Cyan:    color.New(color.FgCyan),
-	White:   color.New(color.FgWhite),
+var colorAttrs = map[Color]color.Attribute{
+	Red:     color.FgRed,
+	Green:   color.FgGreen,
+	Yellow:  color.FgYellow,
+	Blue:    color.FgBlue,
+	Magenta: color.FgMagenta,
+	Cyan:    color.FgCyan,
+	White:   color.FgWhite,
 }
 
 func ColorFromName(name string) Color {
@@ -71,18 +78,35 @@ func CaptureStderr(fn func()) string {
 	return stderr.capture(fn)
 }
 
-func DisableColors(disable bool) {
+func GetColorMode() ColorMode {
 	stderr.writeMu.Lock()
 	defer stderr.writeMu.Unlock()
 
-	stderr.disableColors = disable
+	return stderr.colorMode
 }
 
-func ColorsDisabled() bool {
+func SetColorMode(mode ColorMode) {
 	stderr.writeMu.Lock()
 	defer stderr.writeMu.Unlock()
 
-	return stderr.disableColors
+	stderr.colorMode = mode
+}
+
+func SetColorModeFromString(mode string) error {
+	theMode, ok := map[string]ColorMode{
+		"":       ColorAuto,
+		"always": ColorAlways,
+		"auto":   ColorAuto,
+		"never":  ColorNever,
+	}[mode]
+
+	if !ok {
+		return fmt.Errorf("unsupported color mode: %s. Expected always, auto, or never", mode)
+	}
+
+	SetColorMode(theMode)
+
+	return nil
 }
 
 func Stderrf(format string, args ...any) {
@@ -92,16 +116,17 @@ func Stderrf(format string, args ...any) {
 }
 
 func StderrColorf(c Color, format string, args ...any) {
-	if ColorsDisabled() {
-		Stderrf(format, args...)
-		return
-	}
-
 	outputFunc := fmt.Fprintf
 
+	var theColor *color.Color
+
 	stderr.write(func(w io.Writer) {
-		if clr, ok := colorMap[c]; ok && clr != nil {
-			outputFunc = clr.Fprintf
+		if attribute, ok := colorAttrs[c]; ok && stderr.colorMode != ColorNever {
+			theColor = color.New(attribute)
+			if stderr.colorMode == ColorAlways {
+				theColor.EnableColor()
+			}
+			outputFunc = theColor.Fprintf
 		}
 
 		outputFunc(w, format, args...)

@@ -631,15 +631,8 @@ func (c *Config) preprocess(args map[string]TomlInfo) error {
 
 	c.Build.ExcludeDir = ed
 
-	switch c.Color.Mode {
-	case "always":
-		output.DisableColors(false)
-	case "never":
-		output.DisableColors(true)
-	case "auto", "":
-		break
-	default:
-		return fmt.Errorf("unsupported color mode: %s. Expected always, auto, or never", c.Color.Mode)
+	if err = output.SetColorModeFromString(c.Color.Mode); err != nil {
+		return err
 	}
 
 	if len(c.Build.FullBin) > 0 {
