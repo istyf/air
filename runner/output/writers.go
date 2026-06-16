@@ -17,15 +17,11 @@ func StderrWriter() io.Writer {
 	return stderrWriter
 }
 
-func (w streamWriter) Write(p []byte) (int, error) {
-	var err error
+func (w streamWriter) Write(p []byte) (n int, err error) {
 
 	w.stream.write(func(dst io.Writer) {
-		_, err = dst.Write(p)
+		n, err = dst.Write(p)
 	})
 
-	if err != nil {
-		return 0, err
-	}
-	return len(p), nil
+	return
 }
