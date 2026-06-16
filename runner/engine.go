@@ -775,8 +775,8 @@ func (e *Engine) runBin() error {
 					e.binStopCh = killFunc(cmd, stdout, stderr, killCh, processExit)
 				})
 
-				go copyOutput(os.Stdout, stdout)
-				go copyOutput(os.Stderr, stderr)
+				go copyOutput(output.StdoutWriter(), stdout)
+				go copyOutput(output.StderrWriter(), stderr)
 
 				state, _ := cmd.Process.Wait()
 				close(processExit)
