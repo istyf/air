@@ -12,7 +12,7 @@ func TestLogFuncWritesToStderr(t *testing.T) {
 
 	const LogMessage string = "test message from air"
 
-	errorOutput := output.CaptureStderr(func() {
+	_, errorOutput := output.CaptureStderr(func() {
 		logFn := newLogFunc(output.Raw, cfgLog{})
 		logFn(LogMessage)
 	})

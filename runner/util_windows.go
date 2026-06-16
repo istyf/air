@@ -4,12 +4,12 @@ package runner
 
 import (
 	"io"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 	"syscall"
 
+	"github.com/air-verse/air/runner/output"
 	"golang.org/x/sys/windows"
 )
 
@@ -60,8 +60,8 @@ func (e *Engine) startCmd(cmd string) (*exec.Cmd, io.ReadCloser, io.ReadCloser, 
 		return nil, nil, nil, err
 	}
 
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
+	c.Stdout = output.StdoutWriter()
+	c.Stderr = output.StderrWriter()
 
 	err = c.Start()
 	if err != nil {

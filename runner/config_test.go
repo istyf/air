@@ -679,7 +679,7 @@ cmd = "go build -o ./tmp/main ."
 		t.Fatalf("failed to write config: %v", err)
 	}
 
-	errorOutput := output.CaptureStderr(func() {
+	_, errorOutput := output.CaptureStderr(func() {
 		_, _ = InitConfig(cfgPath, nil)
 	})
 
@@ -1030,7 +1030,7 @@ ignore_dangerous_root_dir = true
 			t.Fatalf("failed to write config: %v", err)
 		}
 
-		errorOutput := output.CaptureStderr(func() {
+		_, errorOutput := output.CaptureStderr(func() {
 			_, _ = InitConfig(cfgPath, nil)
 		})
 

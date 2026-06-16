@@ -78,8 +78,40 @@ func ColorFromName(name string) Color {
 	return White
 }
 
-func CaptureStderr(fn func()) string {
-	return stderr.capture(fn)
+func CaptureStderr(fn func()) (string, string) {
+	stdout.captureMu.Lock()
+	stderr.captureMu.Lock()
+
+	defer stdout.captureMu.Unlock()
+	defer stderr.captureMu.Unlock()
+
+	var stdbuf bytes.Buffer
+	var errbuf bytes.Buffer
+
+	stdout.writeMu.Lock()
+	stderr.writeMu.Lock()
+
+	oldstd := stdout.writer
+	olderr := stderr.writer
+
+	stdout.writer = &stdbuf
+	stderr.writer = &errbuf
+
+	stdout.writeMu.Unlock()
+	stderr.writeMu.Unlock()
+
+	defer func() {
+		stdout.writeMu.Lock()
+		stderr.writeMu.Lock()
+		stdout.writer = oldstd
+		stderr.writer = olderr
+		stdout.writeMu.Unlock()
+		stderr.writeMu.Unlock()
+	}()
+
+	fn()
+
+	return stdbuf.String(), errbuf.String()
 }
 
 func GetColorMode() ColorMode {
@@ -165,28 +197,6 @@ func StdoutString(s string) {
 	stdout.write(func(w io.Writer) {
 		_, _ = io.WriteString(w, s)
 	})
-}
-
-func (s *stream) capture(fn func()) string {
-	s.captureMu.Lock()
-	defer s.captureMu.Unlock()
-
-	var buf bytes.Buffer
-
-	s.writeMu.Lock()
-	old := s.writer
-	s.writer = &buf
-	s.writeMu.Unlock()
-
-	defer func() {
-		s.writeMu.Lock()
-		s.writer = old
-		s.writeMu.Unlock()
-	}()
-
-	fn()
-
-	return buf.String()
 }
 
 func (s *stream) write(fn func(io.Writer)) {
