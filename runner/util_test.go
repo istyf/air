@@ -2,7 +2,6 @@ package runner
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -14,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/air-verse/air/runner/output"
 	"github.com/fsnotify/fsnotify"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -503,7 +503,7 @@ func TestGetStructureFieldTagMap(t *testing.T) {
 	tagMap := flatConfig(c)
 	assert.NotEmpty(t, tagMap)
 	for _, i2 := range tagMap {
-		fmt.Printf("%v\n", i2.fieldPath)
+		output.Stdoutf("%v\n", i2.fieldPath)
 	}
 }
 

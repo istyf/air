@@ -44,6 +44,10 @@ var stderr = stream{
 	colorMode: ColorAuto,
 }
 
+var stdout = stream{
+	writer: os.Stdout,
+}
+
 var colorNameMap = map[string]Color{
 	"none":    NoColor,
 	"raw":     Raw,
@@ -136,6 +140,24 @@ func StderrColorf(c Color, format string, args ...any) {
 func Stderrln(args ...any) {
 	stderr.write(func(w io.Writer) {
 		_, _ = fmt.Fprintln(w, args...)
+	})
+}
+
+func Stdoutf(format string, args ...any) {
+	stdout.write(func(w io.Writer) {
+		_, _ = fmt.Fprintf(w, format, args...)
+	})
+}
+
+func Stdoutln(args ...any) {
+	stdout.write(func(w io.Writer) {
+		_, _ = fmt.Fprintln(w, args...)
+	})
+}
+
+func StdoutString(s string) {
+	stdout.write(func(w io.Writer) {
+		_, _ = io.WriteString(w, s)
 	})
 }
 

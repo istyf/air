@@ -1,7 +1,6 @@
 package runner
 
 import (
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -13,6 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/air-verse/air/runner/output"
 	"github.com/gohugoio/hugo/watcher/filenotify"
 	"github.com/joho/godotenv"
 )
@@ -110,7 +110,7 @@ func (e *Engine) Run() {
 		if err != nil {
 			log.Fatalf("Failed writing default config: %+v", err)
 		}
-		fmt.Printf("%s file created to the current directory with the default settings\n", configName)
+		output.Stdoutf("%s file created to the current directory with the default settings\n", configName)
 		return
 	}
 
@@ -430,10 +430,10 @@ func (e *Engine) start() {
 			if e.config.Screen.ClearOnRebuild {
 				if e.config.Screen.KeepScroll {
 					// https://stackoverflow.com/questions/22891644/how-can-i-clear-the-terminal-screen-in-go
-					fmt.Print("\033[2J")
+					output.StdoutString("\033[2J")
 				} else {
 					// https://stackoverflow.com/questions/5367068/clear-a-terminal-screen-for-real/5367075#5367075
-					fmt.Print("\033c")
+					output.StdoutString("\033c")
 				}
 			}
 

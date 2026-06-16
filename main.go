@@ -24,12 +24,19 @@ var (
 )
 
 func helpMessage() {
-	fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n\n", os.Args[0])
-	fmt.Printf("If no command is provided %s will start the runner with the provided flags\n\n", os.Args[0])
-	fmt.Println("Commands:")
-	fmt.Print("  init	creates a .air.toml file with default settings to the current directory\n\n")
+	const MessageFormat string = `Usage of %s:
 
-	fmt.Println("Flags:")
+If no command is provided %s will start the runner with the provided flags
+	
+Commands:
+  init   creates a .air.toml file with default settings to the current directory
+
+Flags:
+`
+
+	output.StdoutString(fmt.Sprintf(MessageFormat, os.Args[0], os.Args[0]))
+
+	// TODO: flag.CommandLine.SetOutput(output.StdErrWriter())
 	flag.PrintDefaults()
 }
 
@@ -151,7 +158,7 @@ func main() {
 	}
 	printStartupBanner(cfg, true)
 	if debugMode && !cfg.Log.Silent {
-		fmt.Println("[debug] mode")
+		output.Stdoutln("[debug] mode")
 	}
 	r, err := runner.NewEngineWithConfig(cfg, debugMode)
 	if err != nil {
