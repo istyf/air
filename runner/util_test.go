@@ -2,6 +2,7 @@ package runner
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -922,6 +924,11 @@ func Test_killCmd_SendInterrupt_SlowGracefulExit(t *testing.T) {
 // Child process must inherit stdout/stderr so ANSI color codes pass through
 // and TTY detection (isatty) works correctly.
 func TestStartCmdPreservesColorOutput(t *testing.T) {
+	var stdoutBuf, stderrBuf bytes.Buffer
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
 	chdir(t, "_testdata")
 
 	cfg := &Config{Build: cfgBuild{}}
@@ -934,15 +941,25 @@ func TestStartCmdPreservesColorOutput(t *testing.T) {
 		colorCmd = `printf '\033[31mhello\033[0m'; printf '\033[32mworld\033[0m' >&2`
 	}
 
-	stdOutput, errorOutput := output.CaptureStderr(func() {
-		cmd, _, _, err := e.startCmd(colorCmd)
-		require.NoError(t, err)
-		_ = cmd.Wait()
-	})
+	cmd, stdout, stderr, err := e.startCmd(colorCmd)
+	require.NoError(t, err)
 
-	assert.Contains(t, string(stdOutput), "\033[31m",
+	go func() {
+		defer wg.Done()
+		_, _ = io.Copy(&stdoutBuf, stdout)
+	}()
+
+	go func() {
+		defer wg.Done()
+		_, _ = io.Copy(&stderrBuf, stderr)
+	}()
+
+	require.NoError(t, cmd.Wait())
+	wg.Wait()
+
+	assert.Contains(t, stdoutBuf.String(), "\033[31m",
 		"child process stdout should preserve ANSI escape codes for color output")
-	assert.Contains(t, string(errorOutput), "\033[32m",
+	assert.Contains(t, stderrBuf.String(), "\033[32m",
 		"child process stderr should preserve ANSI escape codes for color output")
 }
 
