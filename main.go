@@ -36,7 +36,7 @@ Flags:
 
 	output.StdoutString(fmt.Sprintf(MessageFormat, os.Args[0], os.Args[0]))
 
-	// TODO: flag.CommandLine.SetOutput(output.StdErrWriter())
+	flag.CommandLine.SetOutput(output.StdoutWriter())
 	flag.PrintDefaults()
 }
 
@@ -111,27 +111,27 @@ func printStartupBanner(cfg *runner.Config, respectSilent bool) {
 	if banner == "" {
 		return
 	}
-	fmt.Fprint(os.Stderr, banner)
 	if !strings.HasSuffix(banner, "\n") {
-		fmt.Fprintln(os.Stderr)
+		banner += "\n"
 	}
+	output.StderrString(banner)
 }
 
 func printVersionOutput(cfg *runner.Config) {
 	if cfg == nil || cfg.Misc.StartupBanner == nil {
-		fmt.Fprint(os.Stderr, defaultSplashText())
+		output.Stderrln(defaultSplashText())
 		return
 	}
 
 	banner := *cfg.Misc.StartupBanner
 	if banner != "" {
-		fmt.Fprint(os.Stderr, banner)
 		if !strings.HasSuffix(banner, "\n") {
-			fmt.Fprintln(os.Stderr)
+			banner = banner + "\n"
 		}
+		output.StderrString(banner)
 	}
 
-	fmt.Fprint(os.Stderr, versionLineText())
+	output.StderrString(versionLineText())
 }
 
 func main() {
@@ -145,7 +145,7 @@ func main() {
 			printVersionOutput(cfg)
 			return
 		}
-		fmt.Fprint(os.Stderr, defaultSplashText())
+		output.StderrString(defaultSplashText())
 		return
 	}
 	sigs := make(chan os.Signal, 1)

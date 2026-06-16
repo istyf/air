@@ -143,6 +143,12 @@ func Stderrln(args ...any) {
 	})
 }
 
+func StderrString(s string) {
+	stderr.write(func(w io.Writer) {
+		_, _ = io.WriteString(w, s)
+	})
+}
+
 func Stdoutf(format string, args ...any) {
 	stdout.write(func(w io.Writer) {
 		_, _ = fmt.Fprintf(w, format, args...)

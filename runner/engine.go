@@ -623,8 +623,8 @@ func (e *Engine) runCommand(command string) error {
 		stderr.Close()
 	}()
 
-	copyOutput(os.Stdout, stdout)
-	copyOutput(os.Stderr, stderr)
+	copyOutput(output.StdoutWriter(), stdout)
+	copyOutput(output.StderrWriter(), stderr)
 
 	// wait for command to finish
 	return cmd.Wait()
@@ -642,7 +642,7 @@ func (e *Engine) runCommandCopyOutput(command string) (string, error) {
 	}()
 
 	stdoutBytes, _ := io.ReadAll(stdout)
-	_, _ = io.Copy(os.Stdout, strings.NewReader(string(stdoutBytes)))
+	_, _ = io.Copy(output.StdoutWriter(), strings.NewReader(string(stdoutBytes)))
 
 	// wait for command to finish
 	err = cmd.Wait()
